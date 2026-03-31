@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Glasses Try-On</title>
+
+<style>
+  body {
+    font-family: Arial;
+    text-align: center;
+    background: #f5f5f5;
+  }
+
+  #container {
+    position: relative;
+    display: inline-block;
+    margin-top: 20px;
+  }
+
+  #userImage {
+    max-width: 90vw;
+    max-height: 70vh;
+    display: block;
+  }
+
+  #glasses {
+    position: absolute;
+    top: 50px;
+    left: 50px;
+    width: 150px;
+    z-index: 10;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .controls {
+    margin-top: 15px;
+  }
+
+  button {
+    margin: 5px;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+
+  input[type="range"] {
+    width: 200px;
+  }
+</style>
+</head>
+
+<body>
+
+<h2>👓 Glasses Try-On Tool</h2>
+
+<input type="file" id="upload" accept="image/*">
+
+<div id="container">
+  <img id="userImage" src="">
+  <img id="glasses" src="glasses1.png">
+</div>
+
+<div class="controls">
+  <h3>Select Glasses</h3>
+  <button onclick="changeGlasses('glasses1.png')">1</button>
+  <button onclick="changeGlasses('glasses2.png')">2</button>
+  <button onclick="changeGlasses('glasses3.png')">3</button>
+  <button onclick="changeGlasses('glasses4.png')">4</button>
+  <button onclick="changeGlasses('glasses5.png')">5</button>
+  <button onclick="changeGlasses('glasses6.png')">6</button>
+
+  <h3>Resize</h3>
+  <input type="range" id="sizeSlider" min="50" max="400" value="150">
+
+  <br><br>
+  <button onclick="downloadImage()">📸 Download</button>
+</div>
+
+<!-- html2canvas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+const upload = document.getElementById("upload");
+const userImage = document.getElementById("userImage");
+const glasses = document.getElementById("glasses");
+const slider = document.getElementById("sizeSlider");
+
+// Upload image
+upload.addEventListener("change", function () {
+  const file = this.files[0];
+  if (file) {
+    userImage.src = URL.createObjectURL(file);
+  }
+});
+
+// Change glasses
+function changeGlasses(src) {
+  glasses.src = src;
+}
+
+// Resize
+slider.addEventListener("input", function () {
+  glasses.style.width = this.value + "px";
+});
+
+// Drag system (mouse + touch)
+let isDragging = false;
+let offsetX = 0;
+let offsetY = 0;
+
+function getClientX(e) {
+  return e.touches ? e.touches[0].clientX : e.clientX;
+}
+
+function getClientY(e) {
+  return e.touches ? e.touches[0].clientY : e.clientY;
+}
+
+function startDrag(e) {
+  isDragging = true;
+
+  const rect = glasses.getBoundingClientRect();
+  offsetX = getClientX(e) - rect.left;
+  offsetY = getClientY(e) - rect.top;
+
+  glasses.style.cursor = "grabbing";
+}
+
+function moveDrag(e) {
+  if (!isDragging) return;
+
+  const containerRect = document.getElementById("container").getBoundingClientRect();
+
+  glasses.style.left = (getClientX(e) - containerRect.left - offsetX) + "px";
+  glasses.style.top = (getClientY(e) - containerRect.top - offsetY) + "px";
+}
+
+function stopDrag() {
+  isDragging = false;
+  glasses.style.cursor = "grab";
+}
+
+// Mouse events
+glasses.addEventListener("mousedown", startDrag);
+document.addEventListener("mousemove", moveDrag);
+document.addEventListener("mouseup", stopDrag);
+
+// Touch events (mobile)
+glasses.addEventListener("touchstart", startDrag);
+document.addEventListener("touchmove", moveDrag);
+document.addEventListener("touchend", stopDrag);
+
+// Download image
+function downloadImage() {
+  const container = document.getElementById("container");
+
+  html2canvas(container, { scale: 2 }).then(canvas => {
+    const link = document.createElement("a");
+    link.download = "my-glasses-look.png";
+    link.href = canvas.toDataURL();
+    link.click();
+  });
+}
+</script>
+
+</body>
+</html>
